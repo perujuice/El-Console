@@ -111,7 +111,7 @@ def _print_boxed_price(spot_price, price_label, price_color, min_inner=40):
     min_inner: minimum inner width of the box (optional), default 40
     
     """
-    # Build plain (no-ANSI) content so we can measure visual width
+    # Build plain content so we can measure visual width
     plain_content = f"  {spot_price:.4f} kr/kWh  ({price_label})"
 
     # Ensure a minimum width for aesthetics, but grow for longer labels
@@ -212,7 +212,7 @@ def display_prices(prices_today, prices_tomorrow=None, provider_markup=0.0713):
     print(f"  {Colors.DIM}With markup (+{provider_markup:.4f} kr): {total_price:.4f} kr/kWh{Colors.RESET}\n")
 
     # Today's statistics
-    # Collect prices in hour order for statistics & sparkline (missing hours skipped)
+    # Collect prices in hour order for statistics & sparkline (missing hours skipped, if any)
     ordered_hours = sorted(price_by_hour.keys())
     today_prices = [price_by_hour[h]['SEK_per_kWh'] for h in ordered_hours]
     if today_prices:
@@ -348,9 +348,7 @@ def display_prices(prices_today, prices_tomorrow=None, provider_markup=0.0713):
         print("  " + "".join(label_line) + "\n")
 
     except Exception as e:
-        print(f"{Colors.RED}❌ Error drawing sparkline: {e}{Colors.RESET}")
-
-
+        print(f"{Colors.RED} Error drawing sparkline: {e}{Colors.RESET}")
 
     # Tomorrow's prices if available
     if prices_tomorrow:
@@ -378,10 +376,11 @@ def display_prices(prices_today, prices_tomorrow=None, provider_markup=0.0713):
         print(f"  {Colors.DIM}Tomorrow's prices published around 13:00{Colors.RESET}\n")
 
     # Suggestions
-    if today_prices and spot_price < avg_today * 0.8:
-        print(f"  {Colors.GREEN}💡 GOOD TIME TO: Run dishwasher, Vacuum, play video games{Colors.RESET}")
-    elif today_prices and spot_price > avg_today * 1.2:
-        print(f"  {Colors.RED}⚠️  AVOID: Energy-intensive appliances right now{Colors.RESET}")
+    # TODO: improve logic here later, implement statistical approach
+    if today_prices and spot_price < avg_today * 0.8: # Right now I am using 80% of average as threshold
+        print(f"  {Colors.GREEN} GOOD TIME TO: Run dishwasher, Vacuum, play video games{Colors.RESET}")
+    elif today_prices and spot_price > avg_today * 1.2: # And here just 20% over average.
+        print(f"  {Colors.RED} AVOID: Energy-intensive appliances right now{Colors.RESET}")
 
     print(f"\n  {Colors.DIM}Source: elprisetjustnu.se | Data from ENTSO-E{Colors.RESET}")
     print(f"  {Colors.DIM}Updates every hour{Colors.RESET}\n")
@@ -393,7 +392,7 @@ def main():
 
     while True:
         try:
-            # Get today's date in YYYY-MM-DD format (API expects this)
+            # Get today's date in YYYY-MM-DD format (API expects this swedish format)
             today = datetime.now()
             today_str = today.strftime("%Y/%m-%d")
 
@@ -418,7 +417,7 @@ def main():
             print(f"\n\n{Colors.CYAN}👋 Goodbye!{Colors.RESET}\n")
             sys.exit(0)
         except Exception as e:
-            print(f"\n{Colors.RED}❌ Error: {e}{Colors.RESET}")
+            print(f"\n{Colors.RED} Error: {e}{Colors.RESET}")
             print(f"{Colors.DIM}Retrying in 30 seconds...{Colors.RESET}")
             time.sleep(30)
 
